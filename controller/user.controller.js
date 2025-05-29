@@ -87,7 +87,7 @@ exports.handleUserLogin = async (req, res) => {
     const SECRET_kEY = process?.env?.SECRET_kEY;
     const token = jwt.sign(
       {
-        exp: Math.floor(Date.now() / 1000) + 60 * 60,
+        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
         data: user,
       },
       SECRET_kEY
