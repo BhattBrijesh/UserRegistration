@@ -1,13 +1,18 @@
 const { default: mongoose } = require("mongoose");
 const userRegisterModal = require("../model/userRegister.modal");
-const { validateCreatingUser } = require("../validators/createUser.validator");
+const {
+  validateCreatingUser,
+  validateLoginUser,
+} = require("../validators/createUser.validator");
 const bcrypt = require("bcryptjs");
+const validator = require("validator");
+const jwt = require("jsonwebtoken");
 
 exports.handleCreateUser = async (req, res) => {
   try {
     const validateError = validateCreatingUser(req.body);
     if (validateError?.length > 0) {
-      return res.status(400).json({ message: validateError.join(", ") });
+      return res.status(400).json({ message: validateError?.join(", ") });
     }
 
     const {
@@ -37,7 +42,7 @@ exports.handleCreateUser = async (req, res) => {
 exports.handleGetUserDetail = async (req, res) => {
   try {
     const urlId = req?.query?.id;
-    console.log("urlId--", urlId);
+
     if (urlId) {
       if (!mongoose.Types.ObjectId.isValid(urlId)) {
         return res.status(400).json({ message: "enter valid user id" });
@@ -56,5 +61,42 @@ exports.handleGetUserDetail = async (req, res) => {
       .json({ message: "user fetched successfully", data: getAllUser });
   } catch (error) {
     return res.status(400).json({ message: error?.message });
+  }
+};
+exports.handleUserLogin = async (req, res) => {
+  const { email = "", password = "" } = req.body || {};
+  const ValidatorError = validateLoginUser(req.body);
+  if (ValidatorError?.length > 0) {
+    return res.status(400).json({ message: ValidatorError?.join(", ") });
+  }
+  if (!validator.isEmail(email)) {
+    return res.status(400).json({ message: "Invalid email format" });
+  }
+  try {
+    const user = await userRegisterModal.findOne({ email });
+
+    if (!user) {
+      return res
+        .send(400)
+        .json({ message: "User with this email does not exist" });
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
+    const SECRET_kEY = process?.env?.SECRET_kEY;
+    const token = jwt.sign(
+      {
+        exp: Math.floor(Date.now() / 1000) + 60 * 60,
+        data: user,
+      },
+      SECRET_kEY
+    );
+
+    return res
+      .status(200)
+      .json({ message: "Login successful", data: { user, token } });
+  } catch (error) {
+    res.status(400).json({ message: error?.message });
   }
 };

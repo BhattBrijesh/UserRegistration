@@ -8,12 +8,23 @@ exports.validateCreatingUser = (user) => {
   const error = [];
   if (!firstName?.trim()) {
     error.push("first name is required");
-  } else if (!email?.trim()) {
+  }
+  if (!email?.trim()) {
     error.push("email  is required");
-  } else if (!jobRole?.trim()) {
+  }
+  if (!jobRole?.trim()) {
     error.push("job role is required");
-  } else if (!password?.trim()) {
+  }
+  if (!password?.trim()) {
     error.push("password is required");
   }
+  return error;
+};
+exports.validateLoginUser = (user) => {
+  const { email = "", password = "" } = user || {};
+  const error = [];
+  if (!email?.trim()) error.push("email is required");
+  if (!password?.trim()) error.push("password is required");
+
   return error;
 };
