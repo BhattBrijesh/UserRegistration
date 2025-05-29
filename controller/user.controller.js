@@ -80,7 +80,7 @@ exports.handleUserLogin = async (req, res) => {
         .send(400)
         .json({ message: "User with this email does not exist" });
     }
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user?.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid password" });
     }
